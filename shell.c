@@ -4,11 +4,12 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <regex.h>
 
 #include "utils.h"
 
-#define ANSI_COLOR_GREEN "\x1b[32m"
-#define ANSI_COLOR_BLUE "\x1b[34m"
+#define ANSI_COLOR_GREEN "\e[0;32m"
+#define ANSI_COLOR_BLUE "\e[0;34m"
 #define ANSI_COLOR_RESET "\x1b[0m"
 
 #define PATH_MAX 4096
@@ -18,15 +19,22 @@ int main()
     char *line = NULL;
     char directory[PATH_MAX];
     char *username;
+    char *username2;
     char hostname[_SC_HOST_NAME_MAX + 1];
     char **command;
-    int exit;
+    int exit = 1;
+    char *colorUser = ANSI_COLOR_GREEN;
+    char *colorPath = ANSI_COLOR_BLUE;
+    char *colorAux;
     do
     {
-        if (getcwd(directory, sizeof(directory)) != NULL && gethostname(hostname, _SC_HOST_NAME_MAX + 1) == 0 && (username = getlogin()) != NULL)
+        // if (getcwd(directory, sizeof(directory)) != NULL && gethostname(hostname, _SC_HOST_NAME_MAX + 1) == 0 && (username = getlogin()) != NULL)
+        if (1 == 1)
         {
-            printf(ANSI_COLOR_GREEN "%s@%s" ANSI_COLOR_RESET ":", username, hostname);
-            printf(ANSI_COLOR_BLUE "%s" ANSI_COLOR_RESET "> ", directory);
+            username = "Paco";
+            username2 = "Pedro";
+            printf("%s%s@%s" ANSI_COLOR_RESET ":", colorUser, username, username2);
+            printf("%s%s" ANSI_COLOR_RESET "> ", colorPath, directory);
             line = readLine();
             command = tokenize(line);
 
@@ -41,7 +49,34 @@ int main()
                 }
                 else if (strncmp(command[0], "echo", 5) == 0)
                 {
-                    printf("%s\n", command[1]);
+                    if(command[1] != '\0') printf("%s\n", command[1]);
+                }
+                else if (strncmp(command[0], "color", 6) == 0)
+                {
+                    if(strncmp(command[1], "help", 5) == 0){
+                        printf("Usage: color -[argument] [color]\n\nThe possible arguments are:\n-u: User and host color\n-p: Path color");
+                        printf("\n\nAvailable colors are: red, green, yellow, blue, purple, cyan and white\n\nColors and arguments must be written in lowercase.");
+                    }else if (strncmp(command[1], "-u", 3) == 0)
+                    {
+                        if(command[2] != '\0'){
+                            colorAux = selectColor(command[2]);
+                            if (colorAux != NULL)
+                            {
+                                colorUser = colorAux;
+                            }
+                            
+                        }
+                    }else if (strncmp(command[1], "-p", 3) == 0)
+                    {
+                        if(command[2] != '\0'){
+                            colorAux = selectColor(command[2]);
+                            if (colorAux != NULL)
+                            {
+                                colorPath = colorAux;
+                            }
+                        } 
+                    }
+                    free(colorAux);
                 }
                 else
                 {

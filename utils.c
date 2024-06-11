@@ -2,6 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define ANSI_COLOR_GREEN "\e[0;32m"
+#define ANSI_COLOR_BLUE "\e[0;34m"
+#define ANSI_COLOR_RED "\e[0;31m"
+#define ANSI_COLOR_YELLOW "\e[0;33m"
+#define ANSI_COLOR_PURPLE "\e[0;35m"
+#define ANSI_COLOR_CYAN "\e[0;36m"
+#define ANSI_COLOR_WHITE "\e[0;37m"
+
 #include "utils.h"
 
 #define BUFFER_SIZE 64
@@ -92,4 +100,36 @@ int isEmpty(char *string)
   }
 
   return 1;
+}
+
+char *selectColor(char* color){
+  if (strncmp(color, "red", 4) == 0){
+    return ANSI_COLOR_RED;
+  }
+
+  if (strncmp(color, "green", 6) == 0){
+    return ANSI_COLOR_GREEN;
+  }
+
+  if (strncmp(color, "blue", 5) == 0){
+    return ANSI_COLOR_BLUE;
+  }
+
+  if (strncmp(color, "white", 6) == 0){
+    return ANSI_COLOR_WHITE;
+  }
+
+  if (strncmp(color, "yellow", 7) == 0){
+    return ANSI_COLOR_YELLOW;
+  }
+
+  if (strncmp(color, "purple", 7) == 0){
+    return ANSI_COLOR_PURPLE;
+  }
+
+  if (strncmp(color, "cyan", 5) == 0){
+    return ANSI_COLOR_CYAN;
+  }
+
+  return NULL;
 }
