@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define ANSI_COLOR_GREEN "\e[0;32m"
 #define ANSI_COLOR_BLUE "\e[0;34m"
@@ -132,4 +135,34 @@ char *selectColor(char* color){
   }
 
   return NULL;
+}
+
+int presentPipe(char **arr){
+  int index = 0;
+  while(arr[index] != '\0'){
+      if (strncmp(arr[index], "|", 2) == 0)
+      {
+        return index;
+      }
+    index++;
+  }
+  return -1;
+}
+
+void processPipe(int index, char **command){
+  int auxIndex = 0;
+  char **command1, **command2;
+  while (command[auxIndex] != '\0')
+  {
+    if (auxIndex < index)
+    {
+      command1[auxIndex] = strdup(command[auxIndex]);
+    }else if (auxIndex > index)
+    {
+      command2[auxIndex] = strdup(command[auxIndex]);
+    }
+  }
+
+  pid_t chil1 = fork();
+  pid_t child2 = fork();
 }

@@ -4,7 +4,6 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <regex.h>
 
 #include "utils.h"
 
@@ -26,6 +25,7 @@ int main()
     char *colorUser = ANSI_COLOR_GREEN;
     char *colorPath = ANSI_COLOR_BLUE;
     char *colorAux;
+    int aux;
     do
     {
         // if (getcwd(directory, sizeof(directory)) != NULL && gethostname(hostname, _SC_HOST_NAME_MAX + 1) == 0 && (username = getlogin()) != NULL)
@@ -78,6 +78,10 @@ int main()
                     }
                     free(colorAux);
                 }
+                else if ((aux = presentPipe(command)) != -1)
+                {
+                    processPipe(aux, command);
+                }
                 else
                 {
                     pid_t pid = fork();
@@ -101,7 +105,7 @@ int main()
         }
         else
         {
-            perror("error");
+            perror("error initializing variables");
             return 1;
         }
 

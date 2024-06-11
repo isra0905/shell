@@ -8,3 +8,6 @@ int isEmpty(char *string);
 
 char *selectColor();
 
+int presentPipe();
+
+void processPipe(int index, char **command);
