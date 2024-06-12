@@ -149,20 +149,71 @@ int presentPipe(char **arr){
   return -1;
 }
 
+int presentPipe(char **arr){
+  int index = 0;
+  while(arr[index] != NULL){
+      if (strncmp(arr[index], "|", 2) == 0)
+      {
+        return index;
+      }
+    index++;
+  }
+  return -1;
+}
+
 void processPipe(int index, char **command){
   int auxIndex = 0;
+  int pipe_fds[2];
+  char **aux = command;
   char **command1, **command2;
-  while (command[auxIndex] != '\0')
+
+  while(aux[auxIndex] != NULL)
   {
     if (auxIndex < index)
     {
-      command1[auxIndex] = strdup(command[auxIndex]);
+      command1[auxIndex] = strdup(aux[auxIndex]);
     }else if (auxIndex > index)
     {
-      command2[auxIndex] = strdup(command[auxIndex]);
+      command2[auxIndex] = strdup(aux[auxIndex]);
     }
+    auxIndex++;
   }
 
-  pid_t chil1 = fork();
+  pid_t child1 = fork();
   pid_t child2 = fork();
+  pipe(pipe_fds);
+
+  if (child1 == 0)
+  {
+    dup2(pipe_fds[1], 1);
+    execvp(command1[0], command1);
+  }
+  else if (child1 < 0)
+  {
+    perror("fork failed");
+  }
+
+  if (child2 == 0)
+  {
+    dup2(pipe_fds[0], 0)
+    execvp(command2[0], command2);
+  }
+  else if (child2 < 0)
+  {
+    perror("fork failed");
+  }
+
+
+  if (child1 > 0)
+  {
+      wait(NULL);
+  }
+  
+  if (child2 > 0)
+  {
+      wait(NULL);
+  }
+
+  close(pipe_fs[1]);
+  close(pipe_fs[0]);	
 }

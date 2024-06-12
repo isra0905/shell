@@ -28,8 +28,8 @@ int main()
     int aux;
     do
     {
-        // if (getcwd(directory, sizeof(directory)) != NULL && gethostname(hostname, _SC_HOST_NAME_MAX + 1) == 0 && (username = getlogin()) != NULL)
-        if (1 == 1)
+        if (getcwd(directory, sizeof(directory)) != NULL && gethostname(hostname, _SC_HOST_NAME_MAX + 1) == 0 && (username = getlogin()) != NULL)
+        // if (1 == 1)
         {
             username = "Paco";
             username2 = "Pedro";
@@ -49,7 +49,7 @@ int main()
                 }
                 else if (strncmp(command[0], "echo", 5) == 0)
                 {
-                    if(command[1] != '\0') printf("%s\n", command[1]);
+                    if(isEmpty(command[1]) == 0) printf("%s\n", command[1]);
                 }
                 else if (strncmp(command[0], "color", 6) == 0)
                 {
@@ -58,7 +58,7 @@ int main()
                         printf("\n\nAvailable colors are: red, green, yellow, blue, purple, cyan and white\n\nColors and arguments must be written in lowercase.");
                     }else if (strncmp(command[1], "-u", 3) == 0)
                     {
-                        if(command[2] != '\0'){
+                        if(isEmpty(command[2]) == 0){
                             colorAux = selectColor(command[2]);
                             if (colorAux != NULL)
                             {
@@ -68,7 +68,7 @@ int main()
                         }
                     }else if (strncmp(command[1], "-p", 3) == 0)
                     {
-                        if(command[2] != '\0'){
+                        if(isEmpty(command[2]) == 0){
                             colorAux = selectColor(command[2]);
                             if (colorAux != NULL)
                             {
@@ -78,7 +78,7 @@ int main()
                     }
                     free(colorAux);
                 }
-                else if ((aux = presentPipe(command)) != -1)
+                else if ((aux = presentPipe(command)) != -1 && )
                 {
                     processPipe(aux, command);
                 }
