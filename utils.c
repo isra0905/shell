@@ -4,6 +4,8 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 
 #define ANSI_COLOR_GREEN "\e[0;32m"
 #define ANSI_COLOR_BLUE "\e[0;34m"
@@ -23,7 +25,7 @@ char *readLine()
 
   if (buffer == NULL)
   {
-    fprintf(stderr, "Memory allocation failed\n");
+    fprintf(stderr, "Memory allocation failed 1\n");
     exit(EXIT_FAILURE);
   }
 
@@ -39,7 +41,7 @@ char *readLine()
       buffer = realloc(buffer, bufferSize);
       if (buffer == NULL)
       {
-        fprintf(stderr, "Memory allocation failed\n");
+        fprintf(stderr, "Memory allocation failed 2\n");
         exit(EXIT_FAILURE);
       }
     }
@@ -74,7 +76,7 @@ char **tokenize(char *command)
     aux++;
   }
 
-  args = malloc((argCounter + 1) * sizeof(char *));
+  args = malloc((argCounter + 1) * sizeof(char*));
 
   aux = command;
   argCounter = 0;
@@ -139,18 +141,6 @@ char *selectColor(char* color){
 
 int presentPipe(char **arr){
   int index = 0;
-  while(arr[index] != '\0'){
-      if (strncmp(arr[index], "|", 2) == 0)
-      {
-        return index;
-      }
-    index++;
-  }
-  return -1;
-}
-
-int presentPipe(char **arr){
-  int index = 0;
   while(arr[index] != NULL){
       if (strncmp(arr[index], "|", 2) == 0)
       {
@@ -161,59 +151,164 @@ int presentPipe(char **arr){
   return -1;
 }
 
+int presentRedirection1(char **arr){
+  int index = 0;
+  while(arr[index] != NULL){
+      if (strncmp(arr[index], ">", 2) == 0)
+      {
+        return index;
+      }
+    index++;
+  }
+  return -1;
+}
+
+int presentRedirection2(char **arr){
+  int index = 0;
+  while(arr[index] != NULL){
+      if (strncmp(arr[index], ">>", 3) == 0)
+      {
+        return index;
+      }
+    index++;
+  }
+  return -1;
+}
+
 void processPipe(int index, char **command){
-  int auxIndex = 0;
+  int auxIndex0 = 0, auxIndex1 = 0, auxIndex2 = 0, commandLength = 0;
   int pipe_fds[2];
   char **aux = command;
   char **command1, **command2;
 
-  while(aux[auxIndex] != NULL)
+  while (command[commandLength] != NULL) {
+      commandLength++;
+  }
+
+  command1 = malloc((index + 1) * sizeof(char *));
+  command2 = malloc((commandLength - index) * sizeof(char *));
+
+  while(aux[auxIndex0] != NULL)
   {
-    if (auxIndex < index)
+    if (auxIndex0 < index)
     {
-      command1[auxIndex] = strdup(aux[auxIndex]);
-    }else if (auxIndex > index)
-    {
-      command2[auxIndex] = strdup(aux[auxIndex]);
+      command1[auxIndex1] = strdup(aux[auxIndex0]);
+      auxIndex1++;
     }
-    auxIndex++;
+    else if (auxIndex0 > index)
+    {
+      command2[auxIndex2] = strdup(aux[auxIndex0]);
+      auxIndex2++;
+    }
+    auxIndex0++;
+  }
+
+  command1[auxIndex1] = NULL;
+  command2[auxIndex2] = NULL;
+
+  if (pipe(pipe_fds) == -1)
+  {
+    perror("pipe failed");
   }
 
   pid_t child1 = fork();
-  pid_t child2 = fork();
-  pipe(pipe_fds);
 
   if (child1 == 0)
   {
-    dup2(pipe_fds[1], 1);
-    execvp(command1[0], command1);
+    dup2(pipe_fds[0], STDIN_FILENO);
+    close(pipe_fds[1]);
+    execvp(command2[0], command2);
   }
   else if (child1 < 0)
   {
     perror("fork failed");
   }
 
+  pid_t child2 = fork();
+
   if (child2 == 0)
   {
-    dup2(pipe_fds[0], 0)
-    execvp(command2[0], command2);
+    dup2(pipe_fds[1], STDOUT_FILENO);
+    close(pipe_fds[0]);
+    execvp(command1[0], command1);
   }
   else if (child2 < 0)
   {
     perror("fork failed");
   }
 
+  waitpid(child1, NULL, 0);
+  waitpid(child2, NULL, 0); 
+  close(pipe_fds[1]);
+  close(pipe_fds[0]);
+  free(command1);
+  free(command2);
+}
 
-  if (child1 > 0)
-  {
-      wait(NULL);
-  }
-  
-  if (child2 > 0)
-  {
-      wait(NULL);
-  }
+void processRedirection1(int index, char **command){
+  char* path;
+  int fd;
+  char** command1 = malloc((index + 1) * sizeof(char*));
 
-  close(pipe_fs[1]);
-  close(pipe_fs[0]);	
+  if(isEmpty(command[index+1]) == 0) path = command[index+1];
+
+for (int i = 0; i < index; i++)
+{
+  command1[i] = strdup(command[i]);
+}
+  command1[index] = NULL;
+
+  pid_t pid = fork();
+
+  if(pid == 0)
+  {
+    if((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
+    {
+      dup2(fd, 1);
+      close(fd);
+      execvp(command1[0], command1);
+      exit(EXIT_FAILURE);
+    }
+  }
+  else if (pid < 0)
+  {
+    perror("fork failed");
+  }else
+  {
+    wait(NULL);
+  }
+}
+
+void processRedirection2(int index, char **command){
+  char* path;
+  int fd;
+  char** command1 = malloc((index + 1) * sizeof(char*));
+
+  if(isEmpty(command[index+1]) == 0) path = command[index+1];
+
+for (int i = 0; i < index; i++)
+{
+  command1[i] = strdup(command[i]);
+}
+  command1[index] = NULL;
+
+  pid_t pid = fork();
+
+  if(pid == 0)
+  {
+    if((fd = open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
+    {
+      dup2(fd, 1);
+      close(fd);
+      execvp(command1[0], command1);
+      exit(EXIT_FAILURE);
+    }
+  }
+  else if (pid < 0)
+  {
+    perror("fork failed");
+  }else
+  {
+    wait(NULL);
+  }
 }
