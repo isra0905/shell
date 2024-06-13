@@ -41,7 +41,7 @@ char *readLine()
       buffer = realloc(buffer, bufferSize);
       if (buffer == NULL)
       {
-        fprintf(stderr, "Memory allocation failed 2\n");
+        fprintf(stderr, "Memory reallocation failed 2\n");
         exit(EXIT_FAILURE);
       }
     }
@@ -55,7 +55,7 @@ char *readLine()
 
   if (buffer == NULL)
   {
-    fprintf(stderr, "Memory reallocation failed\n");
+    fprintf(stderr, "Memory reallocation failed 3\n");
     exit(EXIT_FAILURE);
   }
 
@@ -66,8 +66,9 @@ char **tokenize(char *command)
 {
   char **args;
   int argCounter = 0;
-  char *aux = command;
+  char *aux = strdup(command);
   char *copy;
+  char *safeptr = NULL;
 
   while (*aux != '\0')
   {
@@ -76,18 +77,26 @@ char **tokenize(char *command)
     aux++;
   }
 
-  args = malloc((argCounter + 1) * sizeof(char *));
+  args = (char **)malloc(((argCounter + 2) * sizeof(char *)));
 
-  aux = command;
+  aux = strdup(command);
   argCounter = 0;
-  copy = strtok(aux, " ");
+  copy = strtok_r(aux, " ", &safeptr);
+  args[argCounter] = strdup(copy);
+  argCounter++;
+
   while (copy != NULL)
   {
-    args[argCounter] = strdup(copy);
-    argCounter++;
-    copy = strtok(NULL, " ");
+    copy = strtok_r(NULL, " ", &safeptr);
+    if (copy != NULL)
+    {
+      args[argCounter] = strdup(copy);
+      argCounter++;
+    }
   }
+
   args[argCounter] = NULL;
+  free(aux);
 
   return args;
 }
@@ -193,7 +202,7 @@ void processPipe(int index, char **command)
 {
   int auxIndex0 = 0, auxIndex1 = 0, auxIndex2 = 0, commandLength = 0;
   int pipe_fds[2];
-  char **aux = command;
+  char **aux;
   char **command1, **command2;
 
   while (command[commandLength] != NULL)
@@ -201,8 +210,17 @@ void processPipe(int index, char **command)
     commandLength++;
   }
 
-  command1 = malloc((index + 1) * sizeof(char *));
-  command2 = malloc((commandLength - index) * sizeof(char *));
+  aux = (char **)malloc((commandLength + 1) * sizeof(char *));
+
+  for (int i = 0; i < commandLength; i++)
+  {
+    aux[i] = strdup(command[i]);
+  }
+
+  aux[commandLength] = NULL;
+
+  command1 = malloc(((index + 2) * sizeof(char *)));
+  command2 = malloc(((commandLength - index + 1) * sizeof(char *)));
 
   while (aux[auxIndex0] != NULL)
   {
@@ -227,45 +245,42 @@ void processPipe(int index, char **command)
     perror("pipe failed");
   }
 
+  pid_t child2;
   pid_t child1 = fork();
 
-  if (child1 == 0)
+  if (child1 > 0)
+  {
+    child2 = fork();
+
+    if (child2 > 0)
+    {
+      close(pipe_fds[1]);
+      close(pipe_fds[0]);
+      wait(NULL);
+      wait(NULL);
+    }
+    else
+    {
+      dup2(pipe_fds[1], STDOUT_FILENO);
+      close(pipe_fds[0]);
+      execvp(command1[0], command1);
+      exit(EXIT_FAILURE);
+    }
+  }
+  else
   {
     dup2(pipe_fds[0], STDIN_FILENO);
     close(pipe_fds[1]);
     execvp(command2[0], command2);
+    exit(EXIT_FAILURE);
   }
-  else if (child1 < 0)
-  {
-    perror("fork failed");
-  }
-
-  pid_t child2 = fork();
-
-  if (child2 == 0)
-  {
-    dup2(pipe_fds[1], STDOUT_FILENO);
-    close(pipe_fds[0]);
-    execvp(command1[0], command1);
-  }
-  else if (child2 < 0)
-  {
-    perror("fork failed");
-  }
-
-  waitpid(child1, NULL, 0);
-  waitpid(child2, NULL, 0);
-  close(pipe_fds[1]);
-  close(pipe_fds[0]);
-  free(command1);
-  free(command2);
 }
 
 void processRedirection1(int index, char **command)
 {
   char *path;
   int fd;
-  char **command1 = malloc((index + 1) * sizeof(char *));
+  char **command1 = malloc((index + 2) * sizeof(char *));
 
   if (isEmpty(command[index + 1]) == 0)
     path = command[index + 1];
@@ -295,6 +310,7 @@ void processRedirection1(int index, char **command)
   else
   {
     wait(NULL);
+    free(command1);
   }
 }
 
@@ -302,7 +318,7 @@ void processRedirection2(int index, char **command)
 {
   char *path;
   int fd;
-  char **command1 = malloc((index + 1) * sizeof(char *));
+  char **command1 = malloc((index + 2) * sizeof(char *));
 
   if (isEmpty(command[index + 1]) == 0)
     path = command[index + 1];
@@ -332,5 +348,6 @@ void processRedirection2(int index, char **command)
   else
   {
     wait(NULL);
+    free(command1);
   }
 }

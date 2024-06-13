@@ -18,7 +18,6 @@ int main()
     char *line = NULL;
     char directory[PATH_MAX];
     char *username;
-    char *username2;
     char hostname[_SC_HOST_NAME_MAX + 1];
     char **command;
     int exit = 1;
@@ -39,9 +38,12 @@ int main()
             {
                 if (strncmp(command[0], "cd", 3) == 0)
                 {
-                    if (chdir(command[1]) != 0)
+                    if (isEmpty(command[1]) == 0)
                     {
-                        perror("error changing directory");
+                        if (chdir(command[1]) != 0)
+                        {
+                            perror("error changing directory");
+                        }
                     }
                 }
                 else if (strncmp(command[0], "echo", 5) == 0)
