@@ -46,45 +46,51 @@ int main()
                 }
                 else if (strncmp(command[0], "echo", 5) == 0)
                 {
-                    if(isEmpty(command[1]) == 0) printf("%s\n", command[1]);
+                    if (isEmpty(command[1]) == 0)
+                        printf("%s\n", command[1]);
                 }
                 else if (strncmp(command[0], "color", 6) == 0)
                 {
-                    if(isEmpty(command[1]) == 0)
-                    {           
-                        if(strncmp(command[1], "help", 5) == 0){
+                    if (isEmpty(command[1]) == 0)
+                    {
+                        if (strncmp(command[1], "help", 5) == 0)
+                        {
                             printf("Usage: color -[argument] [color]\n\nThe possible arguments are:\n-u: User and host color\n-p: Path color");
                             printf("\n\nAvailable colors are: red, green, yellow, blue, purple, cyan and white\n\nColors and arguments must be written in lowercase.\n");
-                        }else if (strncmp(command[1], "-u", 3) == 0)
+                        }
+                        else if (strncmp(command[1], "-u", 3) == 0)
                         {
-                            if(isEmpty(command[2]) == 0){
+                            if (isEmpty(command[2]) == 0)
+                            {
                                 colorAux = selectColor(command[2]);
                                 if (colorAux != NULL)
                                 {
                                     colorUser = colorAux;
                                 }
-
                             }
-                        }else if (strncmp(command[1], "-p", 3) == 0)
+                        }
+                        else if (strncmp(command[1], "-p", 3) == 0)
                         {
-                            if(isEmpty(command[2]) == 0){
+                            if (isEmpty(command[2]) == 0)
+                            {
                                 colorAux = selectColor(command[2]);
                                 if (colorAux != NULL)
                                 {
                                     colorPath = colorAux;
                                 }
-                            } 
+                            }
                         }
-                    }else{
+                    }
+                    else
+                    {
                         printf("Try using: color help\n");
                     }
-
                 }
                 else if ((aux = presentPipe(command)) != -1)
                 {
                     processPipe(aux, command);
                 }
-                else if((aux = presentRedirection1(command)) != -1)
+                else if ((aux = presentRedirection1(command)) != -1)
                 {
                     processRedirection1(aux, command);
                 }

@@ -76,7 +76,7 @@ char **tokenize(char *command)
     aux++;
   }
 
-  args = malloc((argCounter + 1) * sizeof(char*));
+  args = malloc((argCounter + 1) * sizeof(char *));
 
   aux = command;
   argCounter = 0;
@@ -107,88 +107,104 @@ int isEmpty(char *string)
   return 1;
 }
 
-char *selectColor(char* color){
-  if (strncmp(color, "red", 4) == 0){
+char *selectColor(char *color)
+{
+  if (strncmp(color, "red", 4) == 0)
+  {
     return ANSI_COLOR_RED;
   }
 
-  if (strncmp(color, "green", 6) == 0){
+  if (strncmp(color, "green", 6) == 0)
+  {
     return ANSI_COLOR_GREEN;
   }
 
-  if (strncmp(color, "blue", 5) == 0){
+  if (strncmp(color, "blue", 5) == 0)
+  {
     return ANSI_COLOR_BLUE;
   }
 
-  if (strncmp(color, "white", 6) == 0){
+  if (strncmp(color, "white", 6) == 0)
+  {
     return ANSI_COLOR_WHITE;
   }
 
-  if (strncmp(color, "yellow", 7) == 0){
+  if (strncmp(color, "yellow", 7) == 0)
+  {
     return ANSI_COLOR_YELLOW;
   }
 
-  if (strncmp(color, "purple", 7) == 0){
+  if (strncmp(color, "purple", 7) == 0)
+  {
     return ANSI_COLOR_PURPLE;
   }
 
-  if (strncmp(color, "cyan", 5) == 0){
+  if (strncmp(color, "cyan", 5) == 0)
+  {
     return ANSI_COLOR_CYAN;
   }
 
   return NULL;
 }
 
-int presentPipe(char **arr){
+int presentPipe(char **arr)
+{
   int index = 0;
-  while(arr[index] != NULL){
-      if (strncmp(arr[index], "|", 2) == 0)
-      {
-        return index;
-      }
+  while (arr[index] != NULL)
+  {
+    if (strncmp(arr[index], "|", 2) == 0)
+    {
+      return index;
+    }
     index++;
   }
   return -1;
 }
 
-int presentRedirection1(char **arr){
+int presentRedirection1(char **arr)
+{
   int index = 0;
-  while(arr[index] != NULL){
-      if (strncmp(arr[index], ">", 2) == 0)
-      {
-        return index;
-      }
+  while (arr[index] != NULL)
+  {
+    if (strncmp(arr[index], ">", 2) == 0)
+    {
+      return index;
+    }
     index++;
   }
   return -1;
 }
 
-int presentRedirection2(char **arr){
+int presentRedirection2(char **arr)
+{
   int index = 0;
-  while(arr[index] != NULL){
-      if (strncmp(arr[index], ">>", 3) == 0)
-      {
-        return index;
-      }
+  while (arr[index] != NULL)
+  {
+    if (strncmp(arr[index], ">>", 3) == 0)
+    {
+      return index;
+    }
     index++;
   }
   return -1;
 }
 
-void processPipe(int index, char **command){
+void processPipe(int index, char **command)
+{
   int auxIndex0 = 0, auxIndex1 = 0, auxIndex2 = 0, commandLength = 0;
   int pipe_fds[2];
   char **aux = command;
   char **command1, **command2;
 
-  while (command[commandLength] != NULL) {
-      commandLength++;
+  while (command[commandLength] != NULL)
+  {
+    commandLength++;
   }
 
   command1 = malloc((index + 1) * sizeof(char *));
   command2 = malloc((commandLength - index) * sizeof(char *));
 
-  while(aux[auxIndex0] != NULL)
+  while (aux[auxIndex0] != NULL)
   {
     if (auxIndex0 < index)
     {
@@ -238,31 +254,33 @@ void processPipe(int index, char **command){
   }
 
   waitpid(child1, NULL, 0);
-  waitpid(child2, NULL, 0); 
+  waitpid(child2, NULL, 0);
   close(pipe_fds[1]);
   close(pipe_fds[0]);
   free(command1);
   free(command2);
 }
 
-void processRedirection1(int index, char **command){
-  char* path;
-  int fd;
-  char** command1 = malloc((index + 1) * sizeof(char*));
-
-  if(isEmpty(command[index+1]) == 0) path = command[index+1];
-
-for (int i = 0; i < index; i++)
+void processRedirection1(int index, char **command)
 {
-  command1[i] = strdup(command[i]);
-}
+  char *path;
+  int fd;
+  char **command1 = malloc((index + 1) * sizeof(char *));
+
+  if (isEmpty(command[index + 1]) == 0)
+    path = command[index + 1];
+
+  for (int i = 0; i < index; i++)
+  {
+    command1[i] = strdup(command[i]);
+  }
   command1[index] = NULL;
 
   pid_t pid = fork();
 
-  if(pid == 0)
+  if (pid == 0)
   {
-    if((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
+    if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
     {
       dup2(fd, 1);
       close(fd);
@@ -273,30 +291,33 @@ for (int i = 0; i < index; i++)
   else if (pid < 0)
   {
     perror("fork failed");
-  }else
+  }
+  else
   {
     wait(NULL);
   }
 }
 
-void processRedirection2(int index, char **command){
-  char* path;
-  int fd;
-  char** command1 = malloc((index + 1) * sizeof(char*));
-
-  if(isEmpty(command[index+1]) == 0) path = command[index+1];
-
-for (int i = 0; i < index; i++)
+void processRedirection2(int index, char **command)
 {
-  command1[i] = strdup(command[i]);
-}
+  char *path;
+  int fd;
+  char **command1 = malloc((index + 1) * sizeof(char *));
+
+  if (isEmpty(command[index + 1]) == 0)
+    path = command[index + 1];
+
+  for (int i = 0; i < index; i++)
+  {
+    command1[i] = strdup(command[i]);
+  }
   command1[index] = NULL;
 
   pid_t pid = fork();
 
-  if(pid == 0)
+  if (pid == 0)
   {
-    if((fd = open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
+    if ((fd = open(path, O_WRONLY | O_CREAT | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
     {
       dup2(fd, 1);
       close(fd);
@@ -307,7 +328,8 @@ for (int i = 0; i < index; i++)
   else if (pid < 0)
   {
     perror("fork failed");
-  }else
+  }
+  else
   {
     wait(NULL);
   }
