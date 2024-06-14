@@ -77,7 +77,7 @@ char **tokenize(char *command)
     aux++;
   }
 
-  args = (char **)malloc(((argCounter + 2) * sizeof(char *)));
+  args = (char **) malloc(((argCounter + 2) * sizeof(char *)));
 
   aux = strdup(command);
   argCounter = 0;
@@ -114,6 +114,17 @@ int isEmpty(char *string)
   }
 
   return 1;
+}
+
+void freeMemory(char** command){
+  int aux = 0;
+  while (command[aux] != NULL)
+  {
+    free(command[aux]);
+    aux++;
+  }
+  free(command[aux]);
+  free(command);
 }
 
 char *selectColor(char *color)
@@ -210,7 +221,7 @@ void processPipe(int index, char **command)
     commandLength++;
   }
 
-  aux = (char **)malloc((commandLength + 1) * sizeof(char *));
+  aux = (char **) malloc((commandLength + 1) * sizeof(char *));
 
   for (int i = 0; i < commandLength; i++)
   {
@@ -258,6 +269,9 @@ void processPipe(int index, char **command)
       close(pipe_fds[0]);
       wait(NULL);
       wait(NULL);
+      freeMemory(aux);
+      freeMemory(command1);
+      freeMemory(command2);
     }
     else
     {
@@ -310,7 +324,7 @@ void processRedirection1(int index, char **command)
   else
   {
     wait(NULL);
-    free(command1);
+    freeMemory(command1);
   }
 }
 
@@ -348,6 +362,6 @@ void processRedirection2(int index, char **command)
   else
   {
     wait(NULL);
-    free(command1);
+    freeMemory(command1);
   }
 }

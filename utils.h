@@ -6,6 +6,8 @@ char **tokenize(char *command);
 
 int isEmpty(char *string);
 
+void freeMemory(char** command);
+
 char *selectColor();
 
 int presentPipe();

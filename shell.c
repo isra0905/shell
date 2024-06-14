@@ -127,7 +127,8 @@ int main()
             return 1;
         }
 
-        free(command);
+        
+        freeMemory(command);
         free(line);
 
     } while (exit != 0);
