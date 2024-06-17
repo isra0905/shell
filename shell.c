@@ -19,7 +19,7 @@ int main()
     char directory[PATH_MAX];
     char *username;
     char hostname[_SC_HOST_NAME_MAX + 1];
-    char **command;
+    char **command = NULL;
     int exit = 1;
     char *colorUser = ANSI_COLOR_GREEN;
     char *colorPath = ANSI_COLOR_BLUE;
@@ -120,17 +120,20 @@ int main()
 
                 exit = strncmp(line, "exit", 5);
             }
+
+            freeMemory(command);
+            command = NULL;
+            free(line);
+            line = NULL;
         }
         else
         {
             perror("error initializing variables");
+            freeMemory(command);
+            free(line);
             return 1;
         }
-
         
-        freeMemory(command);
-        free(line);
-
     } while (exit != 0);
 
     return 0;

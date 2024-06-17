@@ -117,6 +117,8 @@ int isEmpty(char *string)
 }
 
 void freeMemory(char** command){
+  if (command == NULL) return;
+
   int aux = 0;
   while (command[aux] != NULL)
   {
