@@ -36,7 +36,9 @@ int main()
 
             if (isEmpty(line) == 0)
             {
-                if (strncmp(command[0], "cd", 3) == 0)
+                if ((exit = strncmp(line, "exit", 5)) == 0)
+                    ;
+                else if (strncmp(command[0], "cd", 3) == 0)
                 {
                     if (isEmpty(command[1]) == 0)
                     {
@@ -49,7 +51,20 @@ int main()
                 else if (strncmp(command[0], "echo", 5) == 0)
                 {
                     if (isEmpty(command[1]) == 0)
-                        printf("%s\n", command[1]);
+                    {
+                        if ((aux = presentRedirection1(command)) != -1)
+                        {
+                            processRedirection1(aux, command, line);
+                        }
+                        else if ((aux = presentRedirection2(command)) != -1)
+                        {
+                            processRedirection2(aux, command, line);
+                        }
+                        else
+                        {
+                            printEcho(command, line, 0);
+                        }
+                    }
                 }
                 else if (strncmp(command[0], "color", 6) == 0)
                 {
@@ -94,11 +109,11 @@ int main()
                 }
                 else if ((aux = presentRedirection1(command)) != -1)
                 {
-                    processRedirection1(aux, command);
+                    processRedirection1(aux, command, line);
                 }
                 else if ((aux = presentRedirection2(command)) != -1)
                 {
-                    processRedirection2(aux, command);
+                    processRedirection2(aux, command, line);
                 }
                 else
                 {
@@ -117,23 +132,19 @@ int main()
                         perror("fork failed");
                     }
                 }
-
-                exit = strncmp(line, "exit", 5);
             }
-
-            freeMemory(command);
-            command = NULL;
-            free(line);
-            line = NULL;
         }
         else
         {
             perror("error initializing variables");
-            freeMemory(command);
-            free(line);
             return 1;
         }
-        
+
+        freeMemory(command);
+        free(line);
+        command = NULL;
+        line = NULL;
+
     } while (exit != 0);
 
     return 0;

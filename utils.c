@@ -25,7 +25,7 @@ char *readLine()
 
   if (buffer == NULL)
   {
-    fprintf(stderr, "Memory allocation failed 1\n");
+    fprintf(stderr, "Memory allocation failed\n");
     exit(EXIT_FAILURE);
   }
 
@@ -41,7 +41,7 @@ char *readLine()
       buffer = realloc(buffer, bufferSize);
       if (buffer == NULL)
       {
-        fprintf(stderr, "Memory reallocation failed 2\n");
+        fprintf(stderr, "Memory reallocation failed 1\n");
         exit(EXIT_FAILURE);
       }
     }
@@ -55,7 +55,7 @@ char *readLine()
 
   if (buffer == NULL)
   {
-    fprintf(stderr, "Memory reallocation failed 3\n");
+    fprintf(stderr, "Memory reallocation failed 2\n");
     exit(EXIT_FAILURE);
   }
 
@@ -67,6 +67,7 @@ char **tokenize(char *command)
   char **args;
   int argCounter = 0;
   char *aux = strdup(command);
+  char *origAux = aux;
   char *copy;
   char *safeptr = NULL;
 
@@ -77,9 +78,10 @@ char **tokenize(char *command)
     aux++;
   }
 
-  args = (char **) malloc(((argCounter + 2) * sizeof(char *)));
+  aux = origAux;
 
-  aux = strdup(command);
+  args = (char **)malloc(((argCounter + 2) * sizeof(char *)));
+
   argCounter = 0;
   copy = strtok_r(aux, " ", &safeptr);
   args[argCounter] = strdup(copy);
@@ -116,8 +118,10 @@ int isEmpty(char *string)
   return 1;
 }
 
-void freeMemory(char** command){
-  if (command == NULL) return;
+void freeMemory(char **command)
+{
+  if (command == NULL)
+    return;
 
   int aux = 0;
   while (command[aux] != NULL)
@@ -127,6 +131,22 @@ void freeMemory(char** command){
   }
   free(command[aux]);
   free(command);
+}
+
+void printEcho(char **command, char *line, int child)
+{
+  int index;
+  for (index = 1; command[index] != NULL; index++)
+  {
+    printf("%s ", command[index]);
+  }
+  printf("\n");
+
+  if (child == 1)
+  {
+    freeMemory(command);
+    free(line);
+  }
 }
 
 char *selectColor(char *color)
@@ -223,7 +243,7 @@ void processPipe(int index, char **command)
     commandLength++;
   }
 
-  aux = (char **) malloc((commandLength + 1) * sizeof(char *));
+  aux = (char **)malloc((commandLength + 1) * sizeof(char *));
 
   for (int i = 0; i < commandLength; i++)
   {
@@ -292,10 +312,10 @@ void processPipe(int index, char **command)
   }
 }
 
-void processRedirection1(int index, char **command)
+void processRedirection1(int index, char **command, char *line)
 {
   char *path;
-  int fd;
+  int fd, auxIndex;
   char **command1 = malloc((index + 2) * sizeof(char *));
 
   if (isEmpty(command[index + 1]) == 0)
@@ -313,10 +333,19 @@ void processRedirection1(int index, char **command)
   {
     if ((fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) != -1)
     {
-      dup2(fd, 1);
+      dup2(fd, STDOUT_FILENO);
       close(fd);
-      execvp(command1[0], command1);
-      exit(EXIT_FAILURE);
+      if (strncmp(command1[0], "echo", 5) == 0)
+      {
+        printEcho(command1, line, 1);
+        freeMemory(command);
+        exit(EXIT_SUCCESS);
+      }
+      else
+      {
+        execvp(command1[0], command1);
+        exit(EXIT_FAILURE);
+      }
     }
   }
   else if (pid < 0)
@@ -330,7 +359,7 @@ void processRedirection1(int index, char **command)
   }
 }
 
-void processRedirection2(int index, char **command)
+void processRedirection2(int index, char **command, char *line)
 {
   char *path;
   int fd;
@@ -353,7 +382,17 @@ void processRedirection2(int index, char **command)
     {
       dup2(fd, 1);
       close(fd);
-      execvp(command1[0], command1);
+      if (strncmp(command1[0], "echo", 5) == 0)
+      {
+        printEcho(command1, line, 1);
+        freeMemory(command);
+        exit(EXIT_SUCCESS);
+      }
+      else
+      {
+        execvp(command1[0], command1);
+        exit(EXIT_FAILURE);
+      }
       exit(EXIT_FAILURE);
     }
   }
